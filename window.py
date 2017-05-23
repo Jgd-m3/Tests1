@@ -3,19 +3,80 @@
 import sys
 from tkinter import *
 from tkinter import messagebox
-
+import Connection
 
 
 
 class My_window:
 
 	#definir la funcion que llamaremos
-	def login(self):
+	def ok_button(self):
 		#TO-DO EVERYTHING TO LOGIN THE USR
-		messagebox.showinfo('holis', 'Has logeao HDP > {} < *{}*'.format(self.entrada_usr.get(), self.entrada_pwd.get()))
-		self.parent.set_user_info(self.entrada_usr.get(), self.entrada_pwd.get(), 1)
-		self.window.destroy()
+		
+		usr, pwd = self.are_input_correct()
+		uid = None
 
+		if not usr or not pwd:
+			messagebox.showinfo('ERROR', 'Refill properly the fields')
+			return
+
+		if self.mode: 
+			uid = self.login_select(usr, pwd)
+		else: 
+			num = self.signup_insert(usr, pwd)
+			if num > 0:
+				uid = self.login_select(usr, pwd)
+
+		if uid is not None:
+			messagebox.showinfo('holis', 'Has logeao HDP > {} < ¦ *{}* ¦ ID = "{}"'.format(usr, pwd, uid))
+			self.parent.set_user_info(usr, pwd, uid)
+			self.window.destroy()
+		else:
+			messagebox.showinfo('ERROR', 'Your user doesnt exist')
+			self.window.destroy()
+
+
+	def login_select(self, usr, pwd):
+		#pwd sera last_name en la bbdd del curro
+		select = "select id from ea_users where name = '{}' and last_name = '{}'".format(usr,pwd)
+		
+		conn = Connection.DataBase()
+		try:
+			conn.get_connection()
+
+			data = conn.get_unique_id(select)
+			
+		finally: conn.close_connection()
+
+		return data
+		
+
+	def signup_insert(self, usr, pwd):
+		query = "insert into ea_users(name, last_name, id_roles) values('{}', '{}', 3)".format(usr,pwd)
+		num = 0
+		conn = Connection.DataBase()
+		try:
+			conn.get_connection()
+
+			num = conn.insert_into(query)
+			
+		finally: conn.close_connection()
+		
+		return num
+
+	def are_input_correct(self):
+		name_user = self.check_this_input(self.entrada_usr, 100)
+		pass_user = self.check_this_input(self.entrada_pwd, 100)
+
+		return name_user,pass_user
+
+	def check_this_input(self, inp, max_len):
+		st = inp.get()
+		st = st.strip()
+		return st if len(st) > 0 and len(st) < max_len else None
+
+
+	# atributes : window, parent, mode, entrada_usr entrada_pwd
 	def __init__(self, parent, login = False):
 		#creamos ventana
 		self.window = Tk()
@@ -39,18 +100,14 @@ class My_window:
 
 
 
-		bnt_login = Button(self.window, text=str_mode, width=10, command=self.login).grid(row=10, column=2)
-
-
-
-
-
-
+		bnt_login = Button(self.window, text=str_mode, width=10, command=self.ok_button).grid(row=10, column=2)
 
 
 
 
 		#inicializamos el procesamiento - solo windows
 		self.window.mainloop()
+
+
 
 #end window

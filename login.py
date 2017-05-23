@@ -19,7 +19,6 @@ class login():
 
 	def register_user(self):
 
-
 		while True:
 			root = Tk()
 			root.withdraw()
